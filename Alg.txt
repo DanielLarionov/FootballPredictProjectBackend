@@ -1,0 +1,59 @@
+  // Load the data
+        const stats = await csv().fromFile("2019-20.csv");
+        //get team1 Name and team2 Name and get home games & away games
+        var overallGames=stats.length;
+        var overallHomeGoals=0
+        var overallAwayGoals=0
+        var homeGamesThisSeason = [];
+        var homeTeamGames=0;
+        var homeTeamGoals=0;
+        var homeTeamConceded=0;
+        var awayGamesThisSeason = [];
+        var awayTeamGames=0;
+        var awayTeamGoals=0;
+        var awayTeamConceded=0;
+        //get stats from CSV
+        for (var stat of stats) 
+        {
+            overallHomeGoals=overallHomeGoals+parseInt(stat.FTHG);
+            overallAwayGoals=overallAwayGoals+parseInt(stat.FTAG);
+            if(stat.HomeTeam=="Newcastle"){
+                homeTeamGames++;
+                homeTeamGoals=homeTeamGoals+parseInt(stat.FTHG);
+                homeTeamConceded=homeTeamConceded+parseInt(stat.FTAG);
+                homeGamesThisSeason.push(stat);
+            }
+            if(stat.AwayTeam=="Leicester"){
+                awayTeamGames++;
+                awayTeamGoals=awayTeamGoals+parseInt(stat.FTAG);
+                awayTeamConceded=awayTeamConceded+parseInt(stat.FTHG);
+                awayGamesThisSeason.push(stat);
+            }
+        }
+        // Get home/away team strenght of attack and defence
+        var homeATK=(homeTeamGoals/homeTeamGames)/(overallHomeGoals/overallGames);
+        var homeDEF=(homeTeamConceded/homeTeamGames)/(overallAwayGoals/overallGames);
+        var awayATK=(awayTeamGoals/awayTeamGames)/(overallAwayGoals/overallGames);
+        var awayDEF=(awayTeamConceded/awayTeamGames)/(overallHomeGoals/overallGames);
+        // Get Goal expectancy 
+        var goalExpectancyHome = homeATK*awayDEF*(overallHomeGoals/overallGames);
+        var goalExpectancyAway = awayATK*homeDEF*(overallAwayGoals/overallGames);
+        // Calculate poisson distribution for goals
+        //------------------Home goal expectancy---------------------------------
+        P0H=Math.exp(-goalExpectancyHome)*(Math.pow(goalExpectancyHome,0)/1)
+        P1H=Math.exp(-goalExpectancyHome)*(Math.pow(goalExpectancyHome,1)/1)
+        P2H=Math.exp(-goalExpectancyHome)*(Math.pow(goalExpectancyHome,2)/2)
+        P3H=Math.exp(-goalExpectancyHome)*(Math.pow(goalExpectancyHome,3)/6)
+        P4H=Math.exp(-goalExpectancyHome)*(Math.pow(goalExpectancyHome,4)/24)
+        P5H=Math.exp(-goalExpectancyHome)*(Math.pow(goalExpectancyHome,5)/120)
+        //------------------Away goal expectancy----------------------------------
+        P0A=Math.exp(-goalExpectancyAway)*(Math.pow(goalExpectancyAway,0)/1)
+        P1A=Math.exp(-goalExpectancyAway)*(Math.pow(goalExpectancyAway,1)/1)
+        P2A=Math.exp(-goalExpectancyAway)*(Math.pow(goalExpectancyAway,2)/2)
+        P3A=Math.exp(-goalExpectancyAway)*(Math.pow(goalExpectancyAway,3)/6)
+        P4A=Math.exp(-goalExpectancyAway)*(Math.pow(goalExpectancyAway,4)/24)
+        P5A=Math.exp(-goalExpectancyAway)*(Math.pow(goalExpectancyAway,5)/120)
+        drawOdds=(P0A*P0H)+(P1A*P1H)+(P2A*P2H)+(P3A*P3H)+(P4A*P4H)+(P5A*P5H)
+        homeWinOdds2=(P0A*P1H)+(P0A*P2H)+(P0A*P3H)+(P0A*P4H)+(P0A*P5H)+(P1A*P2H)+(P1A*P3H)+(P1A*P4H)+(P1A*P5H)+(P2A*P3H)+(P2A*P4H)+(P2A*P5H)+(P3A*P4H)+(P3A*P5H)+(P4A*P5H)
+        awayWinOdds2=(P5A*P0H)+(P5A*P1H)+(P5A*P2H)+(P5A*P3H)+(P5A*P4H)+(P4A*P0H)+(P4A*P1H)+(P4A*P2H)+(P4A*P3H)+(P3A*P0H)+(P3A*P1H)+(P3A*P2H)+(P2A*P0H)+(P2A*P1H)+(P1A*P0H)
+        console.log(homeWinOdds2*100,awayWinOdds2*100,drawOdds*100,(drawOdds+awayWinOdds2+homeWinOdds2)*100);
